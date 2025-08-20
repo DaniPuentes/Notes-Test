@@ -1,0 +1,36 @@
+---
+title: "Semana3"
+format: html
+editor: visual
+---
+
+```{r}
+load_pkgs <- function(pkgs) {
+  for (p in pkgs) {
+    if (!require(p, character.only = TRUE)) {
+      install.packages(p)
+      library(p, character.only = TRUE)
+    }}}
+load_pkgs(c("dplyr", "readxl", "ggplot2", "tidyverse", "tidyr", "car", "readxl", "stats", "MASS", "pscl"))
+rm(load_pkgs) #Borrar función
+setwd("/Users/mac/Desktop/AREAS/BIOL-CUANTITATIVE/random/Notes-Test/Semana3")
+```
+
+## Semana 3
+
+Correlaciones
+
+```{r}
+plantas <- read.csv("Plant_height.csv")
+glimpse(plantas)
+```
+
+```{r}
+
+```
+
+Regresiones
+
+```{r}
+
+```

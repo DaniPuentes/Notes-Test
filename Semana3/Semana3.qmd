@@ -34,3 +34,157 @@ Regresiones
 ```{r}
 
 ```
+
+### Pearson correlation
+
+$ \mathrm{Cov}(X, Y) = \frac{1}{n-1} \sum\_{i=1}\^{n} (x_i - \bar{x})(y_i - \bar{y}) $
+
+#### Vamos a crear nuestros datos
+
+```{r}
+data <- tibble(
+  x=rnorm(100, 175,10), 
+  y=rnorm(100, 70, 10)
+)
+
+shapiro.test(data$x)
+shapiro.test(data$y)
+```
+
+La data es normal
+
+```{r}
+data <- data %>% 
+  mutate(x_diff = x - mean(x), 
+         y_diff = y - mean(y))
+```
+
+```{r}
+(covariance = sum(data$x_diff*data$y_diff) / (nrow(data)-1))
+```
+
+```{r}
+desv_x = sqrt((sum(data$x_diff^2)) / (nrow(data)-1))
+desv_y = sqrt((sum(data$y_diff^2)) / (nrow(data)-1))
+(correlation = covariance / (desv_x*desv_y))
+cor.test(data$x, data$y, method = "pearson")
+```
+
+### Spearmnan correlation
+
+$ \rho\_s = 1 - \frac{6 \sum_{i=1}^{n} d_i^2}{n(n^2 - 1)} $
+
+```{r}
+penguins <- read_csv("penguins.csv")
+glimpse(penguins)
+penguins <- na.omit(penguins)
+
+data_spearman <- penguins %>% 
+  dplyr::select(bill_length_mm, body_mass_g)
+
+## Plot density
+
+plot(density(data_spearman$bill_length_mm))
+plot(density(data_spearman$body_mass_g))
+
+## Normality test
+
+shapiro.test(data_spearman$bill_length_mm)
+shapiro.test(data_spearman$body_mass_g)
+
+## Ranks differences
+
+data_spearman = data_spearman %>% 
+  mutate(d = rank(bill_length_mm) - rank(body_mass_g), d2 = d^2)
+
+## Spearman's correlation
+
+(rho = 1 - ((6 * sum(data_spearman$d2)) / 
+             (nrow(data_spearman) * (nrow(data_spearman)^2 - 1))))
+
+cor.test(data_spearman$bill_length_mm, data_spearman$body_mass_g,
+         method = "spearman")
+
+```
+```{r}
+# Linear regression -------------------------------------------------------
+model = lm(bill_length_mm ~ body_mass_g, data = penguins)
+
+summary(model)
+
+### Formula: bill_len = 27.15 + 0.004 * body_mass ###
+
+r2 = summary(model)$r.squared
+
+set.seed(28052004)
+# theme de Daniela para graficas :) 
+theme <- theme_minimal(base_size = 11) + theme(
+        panel.border = element_rect(color = "black", fill = NA, linewidth = 0.4),
+        panel.grid = element_blank(),
+        plot.title = element_text(face = "bold", hjust = 0.5)
+      )
+
+ggplot(data = penguins, aes(x = body_mass_g, y = bill_length_mm)) +
+  geom_point(size = 1.5, alpha = 0.75, color="black") +
+  geom_smooth(method = "lm",
+              color = "red", linetype = "dashed", se = TRUE) +
+  annotate("text", x = 6000, y = 40,
+           label = bquote(R^2 == .(round(r2, 3)))) +
+  labs(x = "Body mass (g)", y = "Bill length (mm)") +
+  theme
+```
+
+```{r}
+
+```
+
+### Fitting Generalized Linear Models
+Logistic formula 
+$$\frac{1}{1 + e^{-\lambda}} $$
+
+$$ \mathbb{P}(y = 1 | \lambda) \therefore \mathbb{P}=\frac{1}{1 + e^{-\lambda}} $$
+
+With some math, we obtain the following expression: 
+
+$$ \frac{1}{e^{\lambda}} = \frac{\mathbb{P}}{1- \mathbb{P}} = Odds$$
+Odd ratio: calculates the relationship between a variable and probability of an event occurring.
+
+$$Ln(\frac{\mathbb{P}}{1-\mathbb{P}}) = Ln(Odds) = \lambda$$
+Therefore, we get and expression (logit function) a linear combination that represents our explanatory variable. 
+```{r}
+# Logit function
+logit <- function(p) {
+  log(p / (1 - p))
+}
+
+# Inverse logit (to go back from lambda to probability)
+inv_logit <- function(lambda) {
+  1 / (1 + exp(-lambda))
+}
+
+
+beta0 <- -1.0
+beta1 <- 0.8
+x <- -4:5
+
+# Linear predictor
+lambda <- beta0 + beta1 * x
+
+# Probability of event
+p <- inv_logit(lambda)
+
+# Odds
+odds <- p / (1 - p)
+
+# Log-odds (should equal lambda)
+log_odds <- logit(p)
+
+
+lambda <- beta0 + beta1 * x
+p <- 1 / (1 + exp(-lambda))
+odds <- p / (1 - p)
+log_odds <- log(p / (1 - p))
+
+data.frame(x, lambda, p, odds, log_odds)
+```
+

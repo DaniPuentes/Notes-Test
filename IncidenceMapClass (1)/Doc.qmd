@@ -48,8 +48,6 @@ rm()
 
 # Method 1: Using terra::vect()
 map <- terra::vect("/Users/mac/Desktop/AREAS/BIOL-CUANTITATIVE/random/Notes-Test/MapaFClass.shp")
-
-
 ```
 
 ## Ordinary Linear Regression  
@@ -70,10 +68,86 @@ Positive values are associates with overfitting
 
 ## We have a spatial structure. Now, what? 
 
+The observations are present in the current data set. But, the distances between them should be calculating using the centroids distance. 
+
 ```{r}
 #Calculando las coordenadas del centroide por depto (Distancias -> Wi,j)
 centr=terra::centroids(spatvector_object)
 ```
 
+The weights are a function of distance. First, which are the coordinates of the previous centroids? Second, save those coordinates in a shared dataframe. 
 
+```{r}
+#Matriz distancias
+cords1= crds(centr, df = TRUE)
+cords2=data.frame(x=cords1[[1]],y=cords1[[2]])
+```
+
+Now, distances between all coordiantes can be calculates using `gw.dist()`
+```{r}
+cords=as.matrix(cords2)
+DM=gw.dist(dp.locat=cords)
+dim(DM)
+```
+
+## We move on to the second step which is to define what bandwidth or bandwidth we are going to use.
+```{r}
+KR="gaussian" #Definimos tipo de kernel osea de ancho de banda
+cords2=cbind(cords2,as.data.frame(spatvector_object))
+```
+
+```{r}
+coordinates(cords2) = c("x", "y")
+```
+
+The bandwidth can be calculated using `bw.gwr()`
+```{r}
+bw1=bw.gwr(data=cords2,formula=InTot~Prec+Temp,dMat=DM,kernel=KR,
+           adaptive=T,approach="AIC")
+```
+
+## GWR model 
+```{r}
+#Tenemos el ancho de banda mejor, vamos a correr GWR con todas las posibles combinaciones entre mis variables independientes
+gwrmodels=gwr.model.selection(DeVar="InTot",InDeVars=c("Temp","Prec"), data=cords2,bw=bw1,approach="AIC",kernel=KR,adaptive=T)
+
+gwrmodels
+```
+
+```{r}
+#Mejor modelo con ambas variables, pero es muy similar al modelo solo con temperatura
+#Modelo ambas variables
+Mod1av=gwr.basic(data=cords2,formula=InTot~Temp+Prec,bw=bw1,
+                 dMat=DM,kernel=KR,adaptive=T)
+Mod1av
+```
+
+```{r}
+#Sacamos los resultados del GWR 
+RESULT=Mod1av[["SDF"]]
+head(RESULT@data)
+```
+
+
+```{r}
+spatvector_object$R2=RESULT$Local_R2
+
+#Graficamos
+tm_shape(st_as_sf(spatvector_object))+tm_polygons(col="R2",style="pretty",palette="-RdBu")+tm_legend(outside=TRUE,text.size=0.8)
+```
+```{r}
+pvals=gwr.t.adjust(Mod1av)
+pp=pvals[["SDF"]] #Sacamos el mapa de pvalues
+head(pp@data) #Revisar correcciones del pvalue calculada
+```
+
+```{r}
+spatvector_object$PREC=RESULT$Prec*(pp$Prec_p<0.1)
+tm_shape(st_as_sf(spatvector_object))+tm_polygons(col="PREC",style="pretty",palette="-RdBu")+tm_legend(outside=TRUE,text.size=0.8)
+```
+
+```{r}
+spatvector_object$TEMP=RESULT$Temp*(pp$Temp_p<0.1)
+tm_shape(st_as_sf(spatvector_object))+tm_polygons(col="TEMP",style="pretty",palette="-RdBu")+ tm_legend(outside=TRUE,text.size=0.8)
+```
 

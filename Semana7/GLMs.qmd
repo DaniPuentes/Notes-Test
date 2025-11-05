@@ -1,0 +1,131 @@
+---
+title: "Actividad en clase"
+subtitle: "GLMs"
+author:
+  - "Daniela A. Puentes Herrera"
+date: "2025-09-19"
+output:
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    highlight: tango
+    code_folding: hide
+    fig_caption: true
+    df_print: paged
+    code_download: true
+    css: styles.css
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r, warning = FALSE, message = FALSE}
+load_pkgs <- function(pkgs) {
+  for (p in pkgs) {
+    if (!require(p, character.only = TRUE)) {
+      install.packages(p)
+      library(p, character.only = TRUE)
+    }}}
+load_pkgs(c("dplyr", "readxl", "ggplot2", "tidyverse", "tidyr", "stats", "multcomp","lmtest","lmtest", "broom", "betareg", "MASS", "statmod", "rio", "lme4", "coefplot2"))
+rm(load_pkgs) #Borrar función ahorrar espacio
+```
+
+```{r}
+data("infert")
+glimpse(infert)
+```
+
+```{r}
+theme <- theme_minimal(base_size = 11) + theme( panel.border = element_rect(color = "black", fill = NA, linewidth = 0.4),
+        panel.grid = element_blank(),
+        plot.title = element_text(face = "bold", hjust = 0.5))
+
+ggplot(data = infert, aes(x=spontaneous, fill=as.factor(spontaneous))) + geom_histogram() + theme
+```
+```{r}
+poisson_model <- glm(data=infert, formula = spontaneous ~ age + education, family = poisson(link = "log"))
+summary(poisson_model)
+```
+# Incorporating generalized linear mixed models 
+
+```{r}
+#Let's load the data set 
+data <- read.csv("/Users/mac/Desktop/AREAS/BIOL-CUANTITATIVE/random/Notes-Test/Semana8/arabidopsis.csv")
+glimpse(data)
+
+ggplot(data=data, aes(x=total.fruits)) + geom_histogram() 
+```
+
+## Let's write our model 
+```{r}
+model_1 <- glmer(data = data, total.fruits ~ nutrient+ amd + (1 | gen)  + (1 | rack), family = poisson)
+summary(model_1)
+
+exp <- data %>% mutate(predic = predict(model_1, type = "response"))
+
+ggplot(exp, aes(x = X)) +
+  geom_line(aes(y = predic, color = "Predicho")) +
+  geom_line(aes(y = total.fruits, color = "Observado")) +
+  labs(x = "",
+       y = "",
+       color = "") +  theme_minimal(base_size = 11) + theme( panel.border = element_rect(color = "black", fill = NA, linewidth = 0.4), panel.grid = element_blank(), plot.title = element_text(face = "bold", hjust = 0.5)) + theme (axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) # Diseñar el theme 
+```
+
+### Modelo binomial negativo 
+```{r}
+model_2 <- glmer.nb(data = data, total.fruits ~ nutrient*amd+ rack + status + (1 | popu) + ( 1 | gen))
+
+exp <- data %>% mutate(predic2 = predict(model_2, type = "response"))
+
+
+ggplot(exp, aes(x = X)) +
+  geom_line(aes(y = predic2, color = "Predicho")) +
+  geom_line(aes(y = total.fruits, color = "Observado")) +
+  labs(x = "",
+       y = "",
+       color = "") +  theme_minimal(base_size = 11) + theme( panel.border = element_rect(color = "black", fill = NA, linewidth = 0.4), panel.grid = element_blank(), plot.title = element_text(face = "bold", hjust = 0.5)) + theme (axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) # Diseñar el theme 
+
+```
+```{r}
+AIC(model_1, model_2)
+BIC(model_1, model_2)
+```
+
+Escoger la distribución adecuada es fundamental para los resultados del modelo. 
+
+```{r}
+install.packages("coefplot2", repos="http://www.math.mcmaster.ca/bolker/R", type="source")
+library(coefplot2)
+```
+
+```{r}
+coefplot2(model_1, intercept = TRUE, main = "Random effect variance")
+
+coefplot2(model_2)
+```
+# Ejercicio en clase
+
+```{r}
+playa <- read.table("/Users/mac/Desktop/AREAS/BIOL-CUANTITATIVE/random/Notes-Test/Semana8/rikz_data.txt", header = TRUE)
+
+ggplot(data = playa, aes(x=Richness)) +geom_ho
+```
+
+Cómo influye el NAP en la riqueza de especies. 
+
+```{r}
+lineal <- lm(data=playa, Richness ~ NAP + Beach)
+summary(lineal)
+```
+
+```{r}
+mixed <- glmer(data=playa, Beach ~ NAP + (1 | Beach))
+summary(mixed)
+
+AIC(lineal, mixed)
+```
+

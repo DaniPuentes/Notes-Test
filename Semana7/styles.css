@@ -1,0 +1,68 @@
+/* ====== ESTILOS PERSONALIZADOS PARA TU TALLER ====== */
+
+/* --- Títulos principales en steelblue --- */
+h1.title {
+  font-size: 3rem;     
+  color: steelblue;     
+  margin-bottom: .4rem;
+}
+
+.subtitle {
+  font-size: 2.5rem;
+  color: steelblue;     
+  margin-top: 0;
+}
+
+/* --- Encabezados jerárquicos sin numeración --- */
+h1, h2, h3, h4 {
+  color: steelblue;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.6rem; }
+h4 { font-size: 1.4rem; }
+
+/* Ocultar numeración automática (bookdown, rmarkdown) */
+.book .book-body .page-wrapper .page-inner section.normal h1::before,
+.book .book-body .page-wrapper .page-inner section.normal h2::before,
+.book .book-body .page-wrapper .page-inner section.normal h3::before,
+.book .book-body .page-wrapper .page-inner section.normal h4::before {
+  content: none !important;
+}
+
+/* --- Tablas con estilo limpio --- */
+table {
+  border-collapse: separate !important;
+  border-spacing: 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  overflow: hidden;
+  width: 100%;
+}
+
+table th {
+  background: steelblue;   
+  font-weight: 500;
+  color: #ffffff;          
+  text-align: left;
+  padding: 10px 14px;
+}
+
+table td {
+  background: white;   
+  color: black;        
+  padding: 10px 14px;
+  font-size: 0.95rem;
+}
+
+/* --- Bloques de código --- */
+pre, code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+}
+
+pre.sourceCode {
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.06);
+}

@@ -1,0 +1,60 @@
+---
+title: "Semana5"
+format: html
+editor: visual
+---
+
+```{r warning = FALSE}
+load_pkgs <- function(pkgs) {
+  for (p in pkgs) {
+    if (!require(p, character.only = TRUE)) {
+      install.packages(p)
+      library(p, character.only = TRUE)
+    }}}
+load_pkgs(c("dplyr", "readxl", "ggplot2", "tidyverse", "tidyr", "car", "readxl", "stats", "MASS", "pscl", "stats"))
+rm(load_pkgs) #Borrar función
+setwd("/Users/mac/Desktop/AREAS/BIOL-CUANTITATIVE/random/Notes-Test/Semana5")
+```
+
+```{r}
+# Load the data 
+Leafshape <- read.csv("Leafshape.csv", header = TRUE) 
+
+# Remove species column
+data <- Leafshape[,2:6]
+# Save into a separate vector
+species <- Leafshape[,1]
+
+# Visualization of the data 
+glimpse(data)
+```
+
+```{r}
+Leaf_PCA <- princomp(data, cor=FALSE)
+plot(Leaf_PCA$scores, pch=1, col = as.factor(species))
+```
+**Nota:** Los scores corresponden a las coordenadas (x,y) de cada uno de los puntos transformados en un espacio dimensional diferente. 
+
+```{r}
+summary(Leaf_PCA)
+```
+
+**Nota:** A partir de los puntos graficados anteriormente se calculan los valores propios. En este caso obtenemos una proporción cumulativa de la varianza. 
+
+```{r}
+screeplot(Leaf_PCA, type = "lines") 
+```
+**Nota:** En este gráfica notamos el criterio del codo. Los dos primeros componentes principales explican la mayor parte de la varianza. 
+
+**¿Qué variables explican cada uno de esos componentes?**
+```{r}
+loadings(Leaf_PCA)
+```
+Para cada componente principal tengo un valor de correlación para cada una de las variables. En este caso, el Comp.1 esta explicado por el ancho de la hoja.
+
+Podemos observar también dichas contribuciones empleando un biplot. Las flechas corresponden a los vectores propios. Estas colapsando la información de tus datos en solo dos. 
+```{r}
+biplot(Leaf_PCA)
+```
+
+

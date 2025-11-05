@@ -1,0 +1,79 @@
+---
+title: "Clase-Semana13-GWR"
+author: Daniela A. Puentes Herrera
+format: html
+editor: visual
+---
+
+## Load libraries
+```{r warning=FALSE, message=FALSE}
+library(terra)
+library(tidyverse)
+library(raster)
+library(tmap)
+library(GWmodel)
+library(sf)
+```
+
+## Load the data
+```{r warning=FALSE, message=FALSE}
+MapSB = st_read("IncidenceMapClass.shp") # Incidencias de accidente ofidico
+Temp = rast("Temp.tif") # Temperatura
+Prep = rast("Prec.tif") # Precipitacion 
+```
+
+## Let's calculate the mean values of each climate variable per state (departamento)
+
+```{r}
+Tp_mean = raster::extract(Temp, MapSB, fun = mean, na.rm = TRUE)
+Prep_mean = raster::extract(Prep, MapSB, fun = mean, na.rm = TRUE)
+```
+
+## Now, we can add the prep and temp data to MapSB
+```{r}
+MapSB$Prec = as.numeric(Prep_mean$Prec)
+MapSB$Temp = as.numeric(Tp_mean$Temp)
+```
+
+##  Save the .shp 
+```{r}
+st_write(MapSB, "/Users/mac/Desktop/AREAS/BIOL-CUANTITATIVE/random/Notes-Test/MapaFClass.shp", driver = "ESRI Shapefile", append = FALSE)
+```
+
+## Load the new data 
+
+```{r}
+rm()
+# Map = st_read("/Users/mac/Desktop/AREAS/BIOL-CUANTITATIVE/random/Notes-Test/MapaFClass.shp") # Incidencias de accidente ofidico
+
+# Method 1: Using terra::vect()
+map <- terra::vect("/Users/mac/Desktop/AREAS/BIOL-CUANTITATIVE/random/Notes-Test/MapaFClass.shp")
+
+
+```
+
+## Ordinary Linear Regression  
+
+```{r}
+ModLM=lm(data=as.data.frame(Map),formula=InTot~Prec+Temp)
+summary(ModLM)
+```
+## Do we have any spatial structure? What about the residual of our previous model? 
+
+```{r}
+#Calculamos residuales y los asignamos al mapa
+Map$RES=as.numeric(residuals(ModLM))
+#Gráficamos el mapa 
+tm_shape(st_as_sf(Map))+tm_polygons(col="RES",style="pretty",palette="-RdBu")+tm_legend(outside=TRUE,text.size=0.8)
+```
+Positive values are associates with overfitting
+
+## We have a spatial structure. Now, what? 
+
+```{r}
+#Calculando las coordenadas del centroide por depto (Distancias -> Wi,j)
+centr=terra::centroids(spatvector_object)
+```
+
+
+

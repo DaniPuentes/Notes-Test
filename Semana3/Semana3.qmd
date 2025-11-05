@@ -188,3 +188,28 @@ log_odds <- log(p / (1 - p))
 data.frame(x, lambda, p, odds, log_odds)
 ```
 
+
+#### Example 
+```{r}
+data(mtcars)
+model = glm(am ~ wt, data = mtcars, family = binomial(link = "logit"))
+summary(model)
+```
+```{r}
+### Let's create a data set and see the distribution of the residuals 
+plot(model$residuals)
+#make predictions
+my_model_preds = predict(model, data=mtcars,  se.fit = TRUE, type = 'response')
+
+#ggplot of the model
+ggplot(data=mtcars, aes(x=wt, y=am, color=as.factor(am))) + geom_point() +
+  geom_line(aes(x = wt, y= my_model_preds$fit), col = 'blue') + theme
+```
+
+
+
+
+
+
+
+
